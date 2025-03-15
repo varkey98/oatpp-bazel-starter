@@ -43,7 +43,7 @@ configure_make(
         "//conditions:default": "lib",
     }),
     out_static_libs = select({
-        "@platforms//os:linux": [
+        "@platforms//os:windows": [
             "libssl.lib",
             "libcrypto.lib",
         ],
