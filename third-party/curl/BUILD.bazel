@@ -11,7 +11,6 @@ _CACHE_ENTRIES = dict({
     "BUILD_EXAMPLES": "OFF",
     "BUILD_TESTING": "OFF",
     "CURL_ENABLE_SSL": "ON",
-    "CMAKE_STATIC_LIBRARY_SUFFIX": ".a",
     "CURL_USE_OPENSSL": "ON",
     "BUILD_CURL_EXE": "OFF",
     "CMAKE_PREFIX_PATH": "$$EXT_BUILD_DEPS$$/openssl;$$EXT_BUILD_DEPS$$/zlib",
@@ -37,7 +36,14 @@ cmake(
             "-fPIC",
         ],
     }),
-    out_static_libs = ["libcurl.a"],
+    out_static_libs = select({
+        "@platforms//os:windows": [
+            "libcurl.lib",
+        ],
+        "//conditions:default": [
+            "libcurl.a",
+        ],
+    }),
     visibility = ["//visibility:public"],
     deps = select({
         "//conditions:default": [

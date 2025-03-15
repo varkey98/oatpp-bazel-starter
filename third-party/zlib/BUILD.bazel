@@ -6,8 +6,14 @@ cmake(
     name = "zlib",
     cache_entries = {
         "BUILD_SHARED_LIBS": "OFF",
-        "CMAKE_STATIC_LIBRARY_SUFFIX": ".a",
     },
     lib_source = "@zlib_patch//:all",
-    out_static_libs = ["libz.a"],
+    out_static_libs = select({
+        "@platforms//os:windows": [
+            "libz.lib",
+        ],
+        "//conditions:default": [
+            "libz.a",
+        ],
+    }),
 )
