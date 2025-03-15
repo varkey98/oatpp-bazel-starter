@@ -1,0 +1,48 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
+
+exports_files([
+    "repositories.MODULE.bazel",
+])
+
+_CACHE_ENTRIES = dict({
+    "BUILD_SHARED_LIBS": "OFF",
+    "BUILD_STATIC_LIBS": "ON",
+    "CMAKE_BUILD_TYPE": "RELEASE",
+    "BUILD_EXAMPLES": "OFF",
+    "BUILD_TESTING": "OFF",
+    "CURL_ENABLE_SSL": "ON",
+    "CMAKE_STATIC_LIBRARY_SUFFIX": ".a",
+    "CURL_USE_OPENSSL": "ON",
+    "BUILD_CURL_EXE": "OFF",
+    "CMAKE_PREFIX_PATH": "$$EXT_BUILD_DEPS$$/openssl;$$EXT_BUILD_DEPS$$/zlib",
+})
+
+cmake(
+    name = "curl",
+    build_args = ["-j2"],
+    cache_entries = select({
+        "@platforms//os:osx": dict(_CACHE_ENTRIES.items() + {
+            "CMAKE_SYSTEM_NAME": "Darwin",
+            "CMAKE_C_FLAGS": "$${CMAKE_C_FLAGS:-} -DHAVE_STRUCT_TIMEVAL",
+            "CMAKE_CXX_FLAGS": "$${CMAKE_CXX_FLAGS:-} -DHAVE_STRUCT_TIMEVAL",
+        }.items()),
+        "//conditions:default": _CACHE_ENTRIES,
+    }),
+    generate_crosstool_file = False,
+    lib_source = "@curl//:all",
+    linkopts = select({
+        "//conditions:default": [
+            "-std=c++11",
+            "-ldl",
+            "-fPIC",
+        ],
+    }),
+    out_static_libs = ["libcurl.a"],
+    visibility = ["//visibility:public"],
+    deps = select({
+        "//conditions:default": [
+            "//third-party/openssl",
+            "//third-party/zlib",
+        ],
+    }),
+)

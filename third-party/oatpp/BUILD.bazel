@@ -1,0 +1,134 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
+
+exports_files([
+    "repositories.MODULE.bazel",
+    "src.oatpp.web.protocol.http.outgoing.Response.cpp.patch",
+])
+
+_CACHE_ENTRIES = {
+    "BUILD_SHARED_LIBS": "OFF",
+    "OATPP_BUILD_TESTS": "OFF",
+    "OATPP_LINK_TEST_LIBRARY": "OFF",
+    "CMAKE_BUILD_TYPE": "RELEASE",
+}
+
+_MACOS_CACHE_ENTRIES = dict(_CACHE_ENTRIES.items() + {
+}.items())
+
+_LINUX_CACHE_ENTRIES = dict(_CACHE_ENTRIES.items() + {
+}.items())
+
+cmake(
+    name = "oatpp",
+    build_args = ["-j2"],
+    cache_entries = select({
+        "@platforms//os:windows": dict(_CACHE_ENTRIES.items() + {
+            "CMAKE_STATIC_LIBRARY_SUFFIX": ".a",
+            "CMAKE_SYSTEM_NAME": "Windows",
+        }.items()),
+        "@platforms//os:osx": _MACOS_CACHE_ENTRIES,
+        "//conditions:default": _LINUX_CACHE_ENTRIES,
+    }),
+    generate_crosstool_file = False,
+    lib_source = select({
+        "//conditions:default": "@oatpp//:all",
+    }),
+    linkopts = select({
+        "@platforms//os:windows": [
+            "-lws2_32",
+            "-lpthread",
+        ],
+        "//conditions:default": [
+            "-lpthread",
+        ],
+    }),
+    out_include_dir = "include/oatpp-1.4.0/oatpp",
+    out_static_libs = [
+        "oatpp-1.4.0/liboatpp.a",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "oatpp_sqlite",
+    srcs = ["@oatpp_sqlite//:all"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":oatpp",
+        "@oatpp_sqlite//:oatpp_sqlite_header",
+    ],
+)
+
+cc_library(
+    name = "oatpp_zlib",
+    srcs = ["@oatpp_zlib//:all"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":oatpp",
+        "//third-party/zlib",
+        "@oatpp_zlib//:oatpp_zlib_header",
+    ],
+)
+
+cc_library(
+    name = "oatpp_openssl",
+    srcs = ["@oatpp_openssl//:all"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":oatpp",
+        "//third-party/openssl",
+        "@oatpp_openssl//:oatpp_openssl_header",
+    ],
+)
+
+cc_library(
+    name = "oatpp_curl",
+    srcs = ["@oatpp_curl//:all"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":oatpp",
+        "//third-party/curl",
+        "@oatpp_curl//:oatpp_curl_header",
+    ],
+)
+
+cc_library(
+    name = "oatpp_swagger",
+    srcs = ["@oatpp_swagger//:all"],
+    data = [
+        "@oatpp_swagger//:res",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":oatpp",
+        "@oatpp_swagger//:oatpp_swagger_header",
+    ],
+)
+
+cc_library(
+    name = "oatpp_websocket",
+    srcs = ["@oatpp_websocket//:all"],
+    data = [],
+    defines = [],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":oatpp",
+        "@oatpp_websocket//:oatpp_websocket_header",
+    ],
+)
+
+cc_import(
+    name = "oatpp_all",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":oatpp",
+        ":oatpp_curl",
+        ":oatpp_openssl",
+        ":oatpp_sqlite",
+        ":oatpp_swagger",
+        ":oatpp_websocket",
+        ":oatpp_zlib",
+    ],
+)

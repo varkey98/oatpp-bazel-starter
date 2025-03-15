@@ -1,0 +1,13 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
+
+package(default_visibility = ["//visibility:public"])
+
+cmake(
+    name = "zlib",
+    cache_entries = {
+        "BUILD_SHARED_LIBS": "OFF",
+        "CMAKE_STATIC_LIBRARY_SUFFIX": ".a",
+    },
+    lib_source = "@zlib_patch//:all",
+    out_static_libs = ["libz.a"],
+)

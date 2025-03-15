@@ -1,0 +1,25 @@
+--- src/oatpp/web/protocol/http/outgoing/Response.cpp	2025-02-22 16:33:50
++++ src/oatpp/web/protocol/http/outgoing/Response.cpp	2025-02-21 11:28:00
+@@ -121,18 +121,18 @@ void Response::send(data::stream::OutputStream* stream
+       bodySize = m_body->getKnownSize();
+
+       if (bodySize >= 0) {
+-        m_headers.put_LockFree(Header::CONTENT_LENGTH, utils::Conversion::int64ToStr(bodySize));
++        m_headers.putIfNotExists_LockFree(Header::CONTENT_LENGTH, utils::Conversion::int64ToStr(bodySize));
+       } else {
+-        m_headers.put_LockFree(Header::TRANSFER_ENCODING, Header::Value::TRANSFER_ENCODING_CHUNKED);
++       if(m_headers.get(Header::CONTENT_LENGTH)== nullptr) m_headers.put_LockFree(Header::TRANSFER_ENCODING, Header::Value::TRANSFER_ENCODING_CHUNKED);
+       }
+
+     } else {
+-      m_headers.put_LockFree(Header::TRANSFER_ENCODING, Header::Value::TRANSFER_ENCODING_CHUNKED);
++     if(m_headers.get(Header::CONTENT_LENGTH)== nullptr) m_headers.put_LockFree(Header::TRANSFER_ENCODING, Header::Value::TRANSFER_ENCODING_CHUNKED);
+       m_headers.put_LockFree(Header::CONTENT_ENCODING, contentEncoderProvider->getEncodingName());
+     }
+
+   } else {
+-    m_headers.put_LockFree(Header::CONTENT_LENGTH, "0");
++    m_headers.putIfNotExists_LockFree(Header::CONTENT_LENGTH, "0");
+   }
+
+   headersWriteBuffer->setCurrentPosition(0);

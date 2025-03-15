@@ -1,0 +1,171 @@
+new_git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+all_content = """
+filegroup(name = "all", srcs = glob(["**"]), visibility = ["//visibility:public"])
+"""
+
+all_sqlite_content = """
+filegroup(
+    name = "all",
+    srcs = glob([
+        "src/oatpp-sqlite/**/*.cpp",
+        "src/oatpp-sqlite/**/*.hpp",
+        "src/sqlite/*.c",
+        "src/sqlite/*.h",
+    ]),
+    visibility = ["//visibility:public"]
+)
+cc_library(
+    name = "oatpp_sqlite_header",
+    includes = ["src","src/oatpp-sqlite","src/sqlite"],
+    visibility = ["//visibility:public"],
+)
+"""
+
+all_swagger_content = """
+filegroup(
+    name = "all",
+    srcs = glob([
+        "src/oatpp-swagger/**/*.cpp",
+        "src/oatpp-swagger/**/*.hpp",
+    ]),
+    visibility = ["//visibility:public"]
+)
+filegroup(
+    name = "res",
+    srcs = glob([
+        "res/**",
+    ]),
+    visibility = ["//visibility:public"]
+)
+cc_library(
+    name = "oatpp_swagger_header",
+    includes = ["src","src/oatpp-swagger"],
+    visibility = ["//visibility:public"],
+)
+"""
+
+all_websocket_content = """
+filegroup(
+    name = "all",
+    srcs = glob([
+        "src/oatpp-websocket/**/*.cpp",
+        "src/oatpp-websocket/**/*.hpp",
+    ]),
+    visibility = ["//visibility:public"]
+)
+cc_library(
+    name = "oatpp_websocket_header",
+    includes = ["src","src/oatpp-websocket"],
+    visibility = ["//visibility:public"],
+)
+"""
+
+all_zlib_content = """
+filegroup(
+    name = "all",
+    srcs = glob([
+        "src/oatpp-zlib/**/*.cpp",
+        "src/oatpp-zlib/**/*.hpp",
+    ]),
+    visibility = ["//visibility:public"]
+)
+cc_library(
+    name = "oatpp_zlib_header",
+    includes = ["src","src/oatpp-zlib"],
+    visibility = ["//visibility:public"],
+)
+"""
+
+all_openssl_content = """
+filegroup(
+    name = "all",
+    srcs = glob([
+        "src/oatpp-openssl/**/*.cpp",
+        "src/oatpp-openssl/**/*.hpp",
+    ]),
+    visibility = ["//visibility:public"]
+)
+cc_library(
+    name = "oatpp_openssl_header",
+    includes = ["src","src/oatpp-openssl"],
+    visibility = ["//visibility:public"],
+)
+"""
+
+all_curl_content = """
+filegroup(
+    name = "all",
+    srcs = glob([
+        "src/oatpp-curl/**/*.cpp",
+        "src/oatpp-curl/**/*.hpp",
+    ]),
+    visibility = ["//visibility:public"]
+)
+cc_library(
+    name = "oatpp_curl_header",
+    includes = ["src","src/oatpp-curl"],
+    visibility = ["//visibility:public"],
+)
+"""
+
+new_git_repository(
+    name = "oatpp",
+    build_file_content = all_content,
+    commit = "c9765f9e903acaa8a89f2d215ce8f45780a623cb",
+    init_submodules = True,
+    patches = [
+        "//third-party/oatpp:src.oatpp.web.protocol.http.outgoing.Response.cpp.patch",
+    ],
+    remote = "https://github.com/oatpp/oatpp.git",
+)
+
+new_git_repository(
+    name = "oatpp_sqlite",
+    build_file_content = all_sqlite_content,
+    commit = "b84df87f1119660f27ccc7aa1ae7fa9f240c5377",
+    init_submodules = True,
+    remote = "https://github.com/oatpp/oatpp-sqlite.git",
+)
+
+new_git_repository(
+    name = "oatpp_swagger",
+    build_file_content = all_swagger_content,
+    commit = "8cb460b546e84b06939a12897c85a6d863c1c53e",
+    init_submodules = True,
+    remote = "https://github.com/oatpp/oatpp-swagger.git",
+)
+
+new_git_repository(
+    name = "oatpp_websocket",
+    build_file_content = all_websocket_content,
+    commit = "e5b67adfd3105627ef700ac49308565c93c491f9",
+    init_submodules = True,
+    remote = "https://github.com/oatpp/oatpp-websocket.git",
+)
+
+new_git_repository(
+    name = "oatpp_zlib",
+    build_file_content = all_zlib_content,
+    commit = "c26ff2c92b9c2abb359458cebe126202fa9a706a",
+    init_submodules = True,
+    remote = "https://github.com/oatpp/oatpp-zlib.git",
+)
+
+new_git_repository(
+    name = "oatpp_openssl",
+    build_file_content = all_openssl_content,
+    commit = "32c6ff8b59406470dbdff6dd65a21b671052abad",
+    init_submodules = True,
+    remote = "https://github.com/oatpp/oatpp-openssl.git",
+)
+
+new_git_repository(
+    name = "oatpp_curl",
+    build_file_content = all_curl_content,
+    commit = "4f7038597191409fa777789fcfd603ddc3d2e18c",
+    init_submodules = True,
+    remote = "https://github.com/oatpp/oatpp-curl.git",
+)
