@@ -8,6 +8,7 @@ cc_binary(
     ),
     includes = ["."],
     deps = [
+        # "//third-party/oatpp:oatpp_all",
         "//third-party/oatpp",
     ],
 )

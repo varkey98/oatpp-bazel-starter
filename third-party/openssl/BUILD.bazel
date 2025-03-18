@@ -4,7 +4,9 @@ https://github.com/bazelbuild/rules_foreign_cc/issues/337
 
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
-exports_files(["repositories.MODULE.bazel"])
+exports_files([
+    "repositories.MODULE.bazel",
+])
 
 # Read https://wiki.openssl.org/index.php/Compilation_and_Installation
 
@@ -22,11 +24,19 @@ configure_make(
         "@platforms//os:osx": [
             "ARFLAGS=\"-static -o\"",
         ],
+        "@platforms//os:windows": [
+            "VC-WIN64A",
+            "no-asm",
+        ],
         "//conditions:default": [
             "-fPIC",
         ],
     }),
     env = select({
+        "@platforms//os:windows": {
+            "CFLAGS": "/MT",
+            "CPPFLAGS": "/MT",
+        },
         "@platforms//os:linux": {
             "CFLAGS": "-fPIC",
             "CPPFLAGS": "-fPIC",

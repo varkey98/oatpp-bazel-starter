@@ -23,7 +23,6 @@ cmake(
     build_args = ["-j2"],
     cache_entries = select({
         "@platforms//os:windows": dict(_CACHE_ENTRIES.items() + {
-            "CMAKE_STATIC_LIBRARY_SUFFIX": ".a",
             "CMAKE_SYSTEM_NAME": "Windows",
         }.items()),
         "@platforms//os:osx": _MACOS_CACHE_ENTRIES,
@@ -45,7 +44,7 @@ cmake(
     out_include_dir = "include/oatpp-1.4.0/oatpp",
     out_static_libs = select({
         "@platforms//os:windows": [
-            "oatpp-1.4.0/liboatpp.lib",
+            "oatpp-1.4.0/oatpp.lib",
         ],
         "//conditions:default": [
             "oatpp-1.4.0/liboatpp.a",
