@@ -6,7 +6,25 @@ cc_binary(
             "**/*.cpp",
         ],
     ),
+    cxxopts = select({
+        "@platforms//os:windows": [
+            "/std:c++17",
+        ],
+        "//conditions:default": [
+            "-std=c++17",
+        ],
+    }),
     includes = ["."],
+    linkopts = select({
+        "@platforms//os:windows": [
+            "-std=c++17",
+        ],
+        "//conditions:default": [
+            "-std=c++11",
+            "-ldl",
+            "-fPIC",
+        ],
+    }),
     deps = [
         # "//third-party/oatpp:oatpp_all",
         "//third-party/oatpp",
