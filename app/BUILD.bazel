@@ -26,7 +26,6 @@ cc_binary(
         ],
     }),
     deps = [
-        # "//third-party/oatpp:oatpp_all",
-        "//third-party/oatpp",
+        "//third-party/oatpp:oatpp_all",
     ],
 )
