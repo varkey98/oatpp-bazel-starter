@@ -34,6 +34,9 @@ cmake(
     }),
     linkopts = select({
         "@platforms//os:windows": [
+            # msvc
+            "-link ws2_32.lib",
+            # mingw64
             "-lws2_32",
             "-lpthread",
         ],
