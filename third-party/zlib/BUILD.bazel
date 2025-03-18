@@ -10,7 +10,7 @@ cmake(
     lib_source = "@zlib_patch//:all",
     out_static_libs = select({
         "@platforms//os:windows": [
-            "libz.lib",
+            "zlib.lib",
         ],
         "//conditions:default": [
             "libz.a",
