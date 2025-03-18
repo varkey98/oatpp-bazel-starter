@@ -60,3 +60,50 @@ show response :
 }
 ```
 
+# openssl windows build failure
+
+Currently, the Windows version of `OpenSSL` is not supported. You need to replace it manually.
+
+like：
+
+```bazel 
+new_local_repository(
+    name = "openssl-windows",
+    build_file_content = """
+cc_library(
+    name = "openssl",
+    srcs = [
+        "lib/libssl.lib",
+        "lib/libcrypto.lib"
+    ],
+    hdrs = glob(["include/openssl/**"]),
+    includes=["include"],
+    visibility = ["//visibility:public"],
+    target_compatible_with = select({
+        "@platforms//os:windows": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+)
+""",
+    path = "c:/openssl/",
+)
+```
+
+update [third-party/openssl/BUILD.bazel](third-party/openssl/BUILD.bazel)中的`openssl`: 
+
+```
+cc_library(
+    name = "openssl",
+    visibility = ["//visibility:public"],
+    deps = select({
+        "@platforms//os:windows": [
+            "@opensl-windows//:openssl",
+        ],
+        "//conditions:default": [
+            ":openssl-build",
+        ],
+    }),
+)
+```
+
+This allows you to skip the compilation of `openssl` and use the precompiled `libssl.lib` and `libcrypto.lib`.
