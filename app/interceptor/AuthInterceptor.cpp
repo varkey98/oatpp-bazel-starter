@@ -3,22 +3,45 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <vector>
 
-std::shared_ptr<AuthInterceptor::OutgoingResponse> AuthInterceptor::intercept(const std::shared_ptr<IncomingRequest>& request) {
+std::shared_ptr<AuthInterceptor::OutgoingResponse> AuthInterceptor::intercept(const std::shared_ptr<IncomingRequest> &request)
+{
 
+    std::vector<traceable_attribute> input_array;
     auto headers = request->getHeaders().getAll();
-    for(auto itr = headers.begin(); itr != headers.end(); itr++) {
-        std::cout<<itr->first.std_str()<<": "<<itr->second.std_str()<<"\n";
+    for (auto itr = headers.begin(); itr != headers.end(); itr++)
+    {
+        traceable_attribute attr;
+        attr.key = itr->first.std_str().c_str();
+        attr.value = itr->second.std_str().c_str();
+    }
+
+    traceable_attributes input_attributes;
+    input_attributes.count = input_array.size();
+    input_attributes.attribute_array = &input_array[0];
+    traceable_process_request_result result;
+    TRACEABLE_RET ret = traceable_process_request(libtraceable, input_attributes, &result);
+
+    ret = traceable_delete_process_request_result_data(result);
+    if (ret != TRACEABLE_SUCCESS)
+    {
+        std::cout << "ERROR: delete process request result" << std::endl;
+        return nullptr;
+    }
+
+    if (result.block)
+    {
+        throw oatpp::web::protocol::http::HttpError(oatpp::web::protocol::http::Status::CODE_403, "Access Forbidden", {});
     }
 
     return nullptr;
-//   throw oatpp::web::protocol::http::HttpError(oatpp::web::protocol::http::Status::CODE_401, "Unauthorized", {});
-
 }
 
-AuthInterceptor::AuthInterceptor() {
-    const char* remote_endpoint = getenv("TA_REMOTE_CONFIG_ENDPOINT");
-    const char* service_name = getenv("TA_SERVICE_NAME");
+AuthInterceptor::AuthInterceptor()
+{
+    const char *remote_endpoint = getenv("TA_REMOTE_CONFIG_ENDPOINT");
+    const char *service_name = getenv("TA_SERVICE_NAME");
 
     traceable_libtraceable_config libtraceable_config = init_libtraceable_config();
     libtraceable_config.log_config.mode = TRACEABLE_LOG_STDOUT;
@@ -31,19 +54,20 @@ AuthInterceptor::AuthInterceptor() {
     libtraceable_config.remote_config.enabled = 1;
     libtraceable_config.remote_config.poll_period_sec = 30;
     libtraceable_config.remote_config.remote_endpoint = remote_endpoint;
-    libtraceable_config.remote_config.poll_period_sec = 2;
     libtraceable_config.sampling_config.enabled = 1;
     libtraceable_config.agent_config.service_name = service_name;
 
     TRACEABLE_RET ret = traceable_new_libtraceable(libtraceable_config, &libtraceable);
-    if (ret != TRACEABLE_SUCCESS) {
+    if (ret != TRACEABLE_SUCCESS)
+    {
         std::cout << "ERROR: new libtraceable" << std::endl;
         return;
     }
 
     ret = traceable_start_libtraceable(libtraceable);
-    if (ret != TRACEABLE_SUCCESS) {
+    if (ret != TRACEABLE_SUCCESS)
+    {
         std::cout << "ERROR: start libtraceable" << std::endl;
         return;
-      }
+    }
 }
