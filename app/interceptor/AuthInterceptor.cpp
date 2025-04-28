@@ -16,6 +16,9 @@ std::shared_ptr<AuthInterceptor::OutgoingResponse> AuthInterceptor::intercept(co
         attributes.emplace("http.request.header." + itr->first.std_str(), itr->second.std_str());
     }
 
+    std::string body = request->readBodyToString();
+    attributes.emplace("http.request.body", body);
+
     std::vector<traceable_attribute> input_array;
     for (auto itr = attributes.begin(); itr != attributes.end(); ++itr) {
         traceable_attribute attr;
