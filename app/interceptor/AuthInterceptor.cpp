@@ -3,18 +3,25 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <unordered_map>
 #include <vector>
 
 std::shared_ptr<AuthInterceptor::OutgoingResponse> AuthInterceptor::intercept(const std::shared_ptr<IncomingRequest> &request)
 {
 
-    std::vector<traceable_attribute> input_array;
+    std::unordered_map<std::string, std::string> attributes;
     auto headers = request->getHeaders().getAll();
     for (auto itr = headers.begin(); itr != headers.end(); itr++)
     {
+        attributes.emplace("http.request.header." + itr->first.std_str(), itr->second.std_str());
+    }
+
+    std::vector<traceable_attribute> input_array;
+    for (auto itr = attributes.begin(); itr != attributes.end(); ++itr) {
         traceable_attribute attr;
-        attr.key = itr->first.std_str().c_str();
-        attr.value = itr->second.std_str().c_str();
+        attr.key = itr->first.c_str();
+        attr.value = itr->second.c_str();
+        input_array.push_back(attr);
     }
 
     traceable_attributes input_attributes;
