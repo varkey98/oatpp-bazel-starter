@@ -2,6 +2,7 @@
 #include "AuthInterceptor.hpp"
 
 #include <iostream>
+#include <cstdlib>
 
 std::shared_ptr<AuthInterceptor::OutgoingResponse> AuthInterceptor::intercept(const std::shared_ptr<IncomingRequest>& request) {
 
@@ -16,6 +17,9 @@ std::shared_ptr<AuthInterceptor::OutgoingResponse> AuthInterceptor::intercept(co
 }
 
 AuthInterceptor::AuthInterceptor() {
+    const char* remote_endpoint = getenv("TA_REMOTE_CONFIG_ENDPOINT");
+    const char* service_name = getenv("TA_SERVICE_NAME");
+
     traceable_libtraceable_config libtraceable_config = init_libtraceable_config();
     libtraceable_config.log_config.mode = TRACEABLE_LOG_STDOUT;
     libtraceable_config.log_config.level = TRACEABLE_LOG_LEVEL_TRACE;
@@ -25,10 +29,11 @@ AuthInterceptor::AuthInterceptor() {
     libtraceable_config.blocking_config.rb_config.enabled = 1;
     libtraceable_config.blocking_config.skip_internal_request = 0;
     libtraceable_config.remote_config.enabled = 1;
-    libtraceable_config.remote_config.remote_endpoint =
-        "host.docker.internal:5441";
+    libtraceable_config.remote_config.poll_period_sec = 30;
+    libtraceable_config.remote_config.remote_endpoint = remote_endpoint;
     libtraceable_config.remote_config.poll_period_sec = 2;
     libtraceable_config.sampling_config.enabled = 1;
+    libtraceable_config.agent_config.service_name = service_name;
 
     TRACEABLE_RET ret = traceable_new_libtraceable(libtraceable_config, &libtraceable);
     if (ret != TRACEABLE_SUCCESS) {
