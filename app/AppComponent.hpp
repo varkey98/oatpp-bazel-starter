@@ -1,6 +1,6 @@
 #ifndef AppComponent_hpp
 #define AppComponent_hpp
-
+#include "interceptor/AuthInterceptor.hpp"
 #include "oatpp/web/server/HttpConnectionHandler.hpp"
 #include "oatpp/web/mime/ContentMappers.hpp"
 
@@ -35,7 +35,10 @@ public:
    */
   OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, serverConnectionHandler)([] {
     OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router); // get Router component
-    return oatpp::web::server::HttpConnectionHandler::createShared(router);
+    auto connectionHandler = oatpp::web::server::HttpConnectionHandler::createShared(router);
+    // connectionHandler->addRequestInterceptor(std::make_shared<oatpp::web::server::interceptor::AllowOptionsGlobal>());
+    connectionHandler->addRequestInterceptor(std::make_shared<AuthInterceptor>());
+    return connectionHandler;
   }());
 
   /**

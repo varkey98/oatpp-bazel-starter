@@ -27,5 +27,17 @@ cc_binary(
     }),
     deps = [
         "//third-party/oatpp:oatpp_all",
+        ":libtraceable",
     ],
+)
+
+cc_library(
+    name = "libtraceable",
+    srcs = [
+        "interceptor/libtraceable/libtraceable_full.a",
+    ],
+    hdrs = [
+        "interceptor/libtraceable/libtraceable.h",
+    ],
+    visibility = ["//visibility:public"],
 )
