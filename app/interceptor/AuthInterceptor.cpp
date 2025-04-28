@@ -1,6 +1,8 @@
 
 #include "AuthInterceptor.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <iostream>
 #include <cstdlib>
 #include <unordered_map>
@@ -13,7 +15,9 @@ std::shared_ptr<AuthInterceptor::OutgoingResponse> AuthInterceptor::intercept(co
     auto headers = request->getHeaders().getAll();
     for (auto itr = headers.begin(); itr != headers.end(); itr++)
     {
-        attributes.emplace("http.request.header." + itr->first.std_str(), itr->second.std_str());
+        std::string key = itr->first.std_str();
+        std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c){ return std::tolower(c); });
+        attributes.emplace("http.request.header." + key, itr->second.std_str());
     }
 
     std::string body = request->readBodyToString();
