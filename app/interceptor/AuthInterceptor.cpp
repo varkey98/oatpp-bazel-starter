@@ -62,11 +62,11 @@ AuthInterceptor::AuthInterceptor()
 
     const char *log_level = getenv("TA_LOG_LEVEL");
     TRACEABLE_LOG_LEVEL level = TRACEABLE_LOG_LEVEL_INFO;
-    if (std::strcmp(log_level, "Trace") == 0)
+    if (log_level != NULL && std::strcmp(log_level, "Trace") == 0)
     {
         level = TRACEABLE_LOG_LEVEL_TRACE;
     }
-    if (std::strcmp(log_level, "Debug") == 0)
+    if (log_level != NULL && std::strcmp(log_level, "Debug") == 0)
     {
         level = TRACEABLE_LOG_LEVEL_DEBUG;
     }
