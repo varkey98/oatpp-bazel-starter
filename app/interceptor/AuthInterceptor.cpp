@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstring>
 #include <iostream>
 #include <cstdlib>
 #include <unordered_map>
@@ -16,7 +17,8 @@ std::shared_ptr<AuthInterceptor::OutgoingResponse> AuthInterceptor::intercept(co
     for (auto itr = headers.begin(); itr != headers.end(); itr++)
     {
         std::string key = itr->first.std_str();
-        std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c){ return std::tolower(c); });
+        std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c)
+                       { return std::tolower(c); });
         attributes.emplace("http.request.header." + key, itr->second.std_str());
     }
 
@@ -24,7 +26,8 @@ std::shared_ptr<AuthInterceptor::OutgoingResponse> AuthInterceptor::intercept(co
     attributes.emplace("http.request.body", body);
 
     std::vector<traceable_attribute> input_array;
-    for (auto itr = attributes.begin(); itr != attributes.end(); ++itr) {
+    for (auto itr = attributes.begin(); itr != attributes.end(); ++itr)
+    {
         traceable_attribute attr;
         attr.key = itr->first.c_str();
         attr.value = itr->second.c_str();
@@ -57,9 +60,20 @@ AuthInterceptor::AuthInterceptor()
     const char *remote_endpoint = getenv("TA_REMOTE_CONFIG_ENDPOINT");
     const char *service_name = getenv("TA_SERVICE_NAME");
 
+    const char *log_level = getenv("TA_LOG_LEVEL");
+    TRACEABLE_LOG_LEVEL level = TRACEABLE_LOG_LEVEL_INFO;
+    if (std::strcmp(log_level, "Trace"))
+    {
+        level = TRACEABLE_LOG_LEVEL_TRACE;
+    }
+    if (std::strcmp(log_level, "Debug"))
+    {
+        level = TRACEABLE_LOG_LEVEL_DEBUG;
+    }
+
     traceable_libtraceable_config libtraceable_config = init_libtraceable_config();
     libtraceable_config.log_config.mode = TRACEABLE_LOG_STDOUT;
-    libtraceable_config.log_config.level = TRACEABLE_LOG_LEVEL_TRACE;
+    libtraceable_config.log_config.level = level;
     libtraceable_config.blocking_config.enabled = 1;
     libtraceable_config.blocking_config.modsecurity_config.enabled = 1;
     libtraceable_config.blocking_config.evaluate_body = 1;
