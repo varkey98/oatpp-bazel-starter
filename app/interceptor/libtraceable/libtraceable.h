@@ -3,6 +3,16 @@
 
 #include <stdint.h>
 
+#ifdef _WIN32
+#ifdef LIBTRACEABLE_EXPORTS
+#define TRACEABLE_API __declspec(dllexport)
+#else
+#define TRACEABLE_API __declspec(dllimport)
+#endif
+#else
+#define TRACEABLE_API
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,6 +41,17 @@ typedef enum {
   TRACEABLE_BARE_SPAN,
   TRACEABLE_FULL_SPAN
 } TRACEABLE_SPAN_TYPE;
+
+typedef enum {
+  TRACEABLE_SPAN_KIND_SERVER,
+  TRACEABLE_SPAN_KIND_CLIENT,
+  TRACEABLE_SPAN_KIND_INTERNAL,
+} TRACEABLE_SPAN_KIND;
+
+typedef enum {
+  TRACEABLE_SPAN_STATUS_OK,
+  TRACEABLE_SPAN_STATUS_ERROR
+} TRACEABLE_SPAN_STATUS;
 
 typedef enum { LOGGING, OTLP, OTLP_HTTP } TRACEABLE_TRACE_REPORTER_TYPE;
 
@@ -95,6 +116,7 @@ typedef struct {
   traceable_edge_decision_service_config eds_config;
   int evaluate_body;
   int skip_internal_request;
+  int skip_client_spans;
   int max_recursion_depth;
   int evaluate_eds_first;
 } traceable_blocking_config;
@@ -230,16 +252,36 @@ typedef struct {
   modsecurity_rule_match* match_arr;
 } modsecurity_rule_matches;
 
+typedef struct {
+  const char* name;
+  TRACEABLE_SPAN_KIND span_kind;
+  const char* traceparent;
+} traceable_start_span_request;
+
+typedef struct {
+  void* span;
+  const char* tracecontext;
+} traceable_start_span_result;
+
+typedef struct {
+  // this is what is returned from traceable_start_span and should be returned
+  // back for freeing the memory
+  const char* tracecontext;
+  traceable_attributes attributes;
+  TRACEABLE_SPAN_STATUS status;
+} traceable_end_span_request;
+
 /*
  * Traceable api functions
  */
-traceable_libtraceable_config init_libtraceable_config();
-TRACEABLE_RET traceable_new_libtraceable(
-    traceable_libtraceable_config libtraceable_config,
-    traceable_libtraceable* out_libtraceable);
-TRACEABLE_RET traceable_start_libtraceable(traceable_libtraceable libtraceable);
-TRACEABLE_RET traceable_delete_libtraceable(
-    traceable_libtraceable libtraceable);
+TRACEABLE_API traceable_libtraceable_config init_libtraceable_config();
+TRACEABLE_API TRACEABLE_RET
+traceable_new_libtraceable(traceable_libtraceable_config libtraceable_config,
+                           traceable_libtraceable* out_libtraceable);
+TRACEABLE_API TRACEABLE_RET
+traceable_start_libtraceable(traceable_libtraceable libtraceable);
+TRACEABLE_API TRACEABLE_RET
+traceable_delete_libtraceable(traceable_libtraceable libtraceable);
 
 /*
  * Process request for headers processing phase. Performs api naming,
@@ -249,30 +291,31 @@ TRACEABLE_RET traceable_delete_libtraceable(
  * will be evaluated twice. Use traceable_process_request() for single phase
  * processing.
  */
-TRACEABLE_RET traceable_process_request_headers(
+TRACEABLE_API TRACEABLE_RET traceable_process_request_headers(
     traceable_libtraceable libtraceable, traceable_attributes attributes,
     traceable_process_request_result* out_process_result);
 /*
  * Process request for body processing phase. Only performs blocking. All
  * attributes will be evaluated.
  */
-TRACEABLE_RET traceable_process_request_body(
+TRACEABLE_API TRACEABLE_RET traceable_process_request_body(
     traceable_libtraceable libtraceable, traceable_attributes attributes,
     traceable_process_request_result* out_process_result);
 /*
  * Process request and perfom api naming, sampling and blocking in one phase.
  */
-TRACEABLE_RET traceable_process_request(
+TRACEABLE_API TRACEABLE_RET traceable_process_request(
     traceable_libtraceable libtraceable, traceable_attributes attributes,
     traceable_process_request_result* out_process_result);
 
-/*
- * Export a request as a span to Traceable Platform Agent.
- */
-TRACEABLE_RET traceable_export_request(traceable_libtraceable libtraceable,
-                                       traceable_attributes attributes);
+TRACEABLE_API TRACEABLE_RET traceable_start_span(
+    traceable_libtraceable libtraceable, traceable_start_span_request request,
+    traceable_start_span_result* out_result);
 
-TRACEABLE_RET traceable_delete_process_request_result_data(
+TRACEABLE_API TRACEABLE_RET
+traceable_end_span(void* span, traceable_end_span_request request);
+
+TRACEABLE_API TRACEABLE_RET traceable_delete_process_request_result_data(
     traceable_process_request_result result);
 
 /*
@@ -280,32 +323,35 @@ TRACEABLE_RET traceable_delete_process_request_result_data(
  *   terminated JSON string. The caller must free "out_string". depth controls
  *   the number of nested groups that are decoded.
  */
-TRACEABLE_RET traceable_decode_protobuf(const char* blob, int length, int depth,
-                                        char** out_string);
+TRACEABLE_API TRACEABLE_RET traceable_decode_protobuf(const char* blob,
+                                                      int length, int depth,
+                                                      char** out_string);
 
-TRACEABLE_RET traceable_is_content_type_capturable(
+TRACEABLE_API void traceable_delete_decode_protobuf_result(const char* string);
+
+TRACEABLE_API TRACEABLE_RET traceable_is_content_type_capturable(
     const char* media_type, const char** supported_content_types,
     int supported_content_types_size, int* out_should_capture);
 
-TRACEABLE_RET traceable_barespan_attributes(traceable_libtraceable libtraceable,
-                                            traceable_attributes attributes,
-                                            traceable_attributes* out_result);
+TRACEABLE_API TRACEABLE_RET traceable_barespan_attributes(
+    traceable_libtraceable libtraceable, traceable_attributes attributes,
+    traceable_attributes* out_result);
 
-TRACEABLE_RET traceable_delete_barespan_attributes_result(
-    traceable_attributes result);
+TRACEABLE_API TRACEABLE_RET
+traceable_delete_barespan_attributes_result(traceable_attributes result);
 
-TRACEABLE_RET modsecurity_new_rule_engine(
+TRACEABLE_API TRACEABLE_RET modsecurity_new_rule_engine(
     const char* rules, modsecurity_rule_engine* out_rule_engine);
 
-TRACEABLE_RET modsecurity_process_attributes(
+TRACEABLE_API TRACEABLE_RET modsecurity_process_attributes(
     modsecurity_rule_engine rule_engine, traceable_attributes attributes,
     modsecurity_rule_matches* out_rule_matches);
 
-TRACEABLE_RET modsecurity_cleanup_rule_matches(
-    modsecurity_rule_matches rule_matches);
+TRACEABLE_API TRACEABLE_RET
+modsecurity_cleanup_rule_matches(modsecurity_rule_matches rule_matches);
 
-TRACEABLE_RET modsecurity_cleanup_rule_engine(
-    modsecurity_rule_engine rule_engine);
+TRACEABLE_API TRACEABLE_RET
+modsecurity_cleanup_rule_engine(modsecurity_rule_engine rule_engine);
 
 #ifdef __cplusplus
 }
